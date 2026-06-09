@@ -1,6 +1,7 @@
 package ucu.edu.aed.tda.grafo.model.impl;
 
 import ucu.edu.aed.tda.grafo.IDirectedIGraph;
+import ucu.edu.aed.tda.grafo.model.edge.DirectedEdge;
 import ucu.edu.aed.tda.grafo.model.edge.Edge;
 
 import java.util.HashSet;
@@ -8,7 +9,13 @@ import java.util.List;
 import java.util.Set;
 
 public class DirectedGraph <V, D> implements IDirectedIGraph <V,D> {
+    private Set<V> vertices;
+    private Set<Edge<V, D>> aristas;
 
+    public DirectedGraph(){
+        this.vertices = new HashSet<>();
+        this.aristas = new HashSet<>();
+    }
 
     @Override
     public Set<V> successors(Comparable<V> criteria) {
@@ -35,7 +42,13 @@ public class DirectedGraph <V, D> implements IDirectedIGraph <V,D> {
     }
 
     @Override
-    public boolean agregarVertice(Object vertex) {
+    public boolean agregarVertice(V vertex) {
+        //El metodo existeVertice está en la interface IGraph
+        if (!existeVertice(construirComparable(vertex))){
+            //Si no existe -> Lo agrego
+            vertices.add(vertex);
+            return true;
+        }
         return false;
     }
 
@@ -45,7 +58,15 @@ public class DirectedGraph <V, D> implements IDirectedIGraph <V,D> {
     }
 
     @Override
-    public boolean agregarArista(Object source, Object target, Object dato) {
+    public boolean agregarArista(V source, V target, D dato) {
+        if(existeVertice(construirComparable(source))){
+            if(existeVertice(construirComparable(target))){
+                if(!existeArista(construirComparable(source), construirComparable(target))){
+                    aristas.add(new DirectedEdge<>(source, target, dato));
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -60,13 +81,13 @@ public class DirectedGraph <V, D> implements IDirectedIGraph <V,D> {
     }
 
     @Override
-    public Set vertices() {
-        return Set.of();
+    public Set<V> vertices() {
+        return vertices;
     }
 
     @Override
-    public Set<Edge> aristas() {
-        return Set.of();
+    public Set<Edge<V, D>> aristas() {
+        return aristas;
     }
 
     @Override
@@ -91,7 +112,6 @@ public class DirectedGraph <V, D> implements IDirectedIGraph <V,D> {
 
     @Override
     public void vaciar() {
-
     }
 
     @Override
