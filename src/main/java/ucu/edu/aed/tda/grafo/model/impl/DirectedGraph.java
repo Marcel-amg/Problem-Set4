@@ -4,6 +4,8 @@ import ucu.edu.aed.tda.grafo.IDirectedIGraph;
 import ucu.edu.aed.tda.grafo.model.edge.DirectedEdge;
 import ucu.edu.aed.tda.grafo.model.edge.Edge;
 
+import java.rmi.dgc.VMID;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -19,25 +21,33 @@ public class DirectedGraph <V, D> implements IDirectedIGraph <V,D> {
 
     @Override
     public Set<V> successors(Comparable<V> criteria) {
+        // Set donde guardamos los vértices alcanzables desde el vértice buscado
         Set<V> puntosDePartida = new HashSet<>();
-
-        for (Edge<V, D> arista : aristas() ){
+        // Recorremos todas las aristas del grafo
+        for (Edge<V, D> arista : aristas()){
+            // Si el origen de la arista coincide con el criterio, guardamos el destino
+            // porque ese es un sucesor del vértice buscado
             if (criteria.compareTo(arista.source()) == 0){
                 puntosDePartida.add(arista.target());
             }
         }
+        // Retornamos todos los sucesores encontrados
         return puntosDePartida;
     }
 
     @Override
     public Set<V> predecessors(Comparable<V> criteria) {
+        // Set donde guardamos los vértices que apuntan al vértice buscado
         Set<V> puntosDeLlegada = new HashSet<>();
-
+        // Recorremos todas las aristas del grafo
         for (Edge<V, D> arista : aristas()){
+            // Si el destino de la arista coincide con el criterio, guardamos el origen
+            // porque ese es un predecesor del vértice buscado
             if (criteria.compareTo(arista.target()) == 0){
                 puntosDeLlegada.add(arista.source());
             }
         }
+        // Retornamos todos los predecesores encontrados
         return puntosDeLlegada;
     }
 
@@ -53,20 +63,33 @@ public class DirectedGraph <V, D> implements IDirectedIGraph <V,D> {
     }
 
     @Override
-    public Object buscarVertice(Comparable criterio) {
+    public V buscarVertice(Comparable<V> criterio) {
+        // Recorremos todos los vértices del grafo
+        for (V vertice : vertices){
+            // Si el criterio coincide con el vértice actual lo retornamos
+            if (criterio.compareTo(vertice) == 0){
+                return vertice;
+            }
+        }
+        // Si no encontró ningún vértice que coincida retorna null
         return null;
     }
 
     @Override
     public boolean agregarArista(V source, V target, D dato) {
+        // Verificamos que el vértice origen exista en el grafo
         if(existeVertice(construirComparable(source))){
+            // Verificamos que el vértice destino exista en el grafo
             if(existeVertice(construirComparable(target))){
+                // Verificamos que la arista no exista ya para evitar duplicados
                 if(!existeArista(construirComparable(source), construirComparable(target))){
+                    // Creamos la arista dirigida y la agregamos al Set
                     aristas.add(new DirectedEdge<>(source, target, dato));
                     return true;
                 }
             }
         }
+        // Retorna false si alguna condición no se cumple
         return false;
     }
 
@@ -91,18 +114,44 @@ public class DirectedGraph <V, D> implements IDirectedIGraph <V,D> {
     }
 
     @Override
-    public boolean existeArista(Comparable sourceCriteria, Comparable targetCriteria) {
+    public boolean existeArista(Comparable<V> sourceCriteria, Comparable<V> targetCriteria) {
+        // Recorremos todas las aristas del grafo
+        for (Edge<V, D> vertice : aristas){
+            // Verificamos que tanto el origen como el destino coincidan con los criterios
+            if (sourceCriteria.compareTo(vertice.source()) == 0 && targetCriteria.compareTo(vertice.target()) == 0){
+                return true;
+            }
+        }
+        // Si no encontró ninguna arista que coincida retorna false
         return false;
     }
 
     @Override
-    public Edge obtenerArista(Comparable sourceCriteria, Comparable targetCriteria) {
+    public Edge<V, D> obtenerArista(Comparable<V> sourceCriteria, Comparable<V> targetCriteria) {
+        // Recorremos todas las aristas del grafo
+        for (Edge<V, D> arista : aristas){
+            // Si el origen y destino coinciden con los criterios, retornamos esa arista
+            if (sourceCriteria.compareTo(arista.source()) == 0 && targetCriteria.compareTo(arista.target()) == 0){
+                return arista;
+            }
+        }
+        // Si no encontró ninguna arista retorna null
         return null;
     }
 
     @Override
-    public List<Edge> adyacencias(Comparable verticeCriteria) {
-        return List.of();
+    public List<Edge<V, D>> adyacencias(Comparable<V> verticeCriteria) {
+        // Lista donde guardamos las aristas salientes del vértice buscado
+        List<Edge<V, D>> resultado = new ArrayList<>();
+        // Recorremos todas las aristas del grafo
+        for(Edge<V, D> arista : aristas){
+            // Si el origen de la arista coincide con el criterio la agregamos
+            if (verticeCriteria.compareTo(arista.source()) == 0){
+                resultado.add(arista);
+            }
+        }
+        // Retornamos todas las aristas salientes encontradas
+        return resultado;
     }
 
     @Override
