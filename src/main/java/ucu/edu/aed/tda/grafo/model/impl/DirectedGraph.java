@@ -165,6 +165,51 @@ public class DirectedGraph <V, D> implements IDirectedIGraph <V,D> {
 
     @Override
     public boolean tieneCiclos() {
+        Set<V> visitados = new HashSet<>();
+        Set<V> enProceso = new HashSet<>();
+
+        // Recorremos todos los vértices del grafo
+        for(V vertice : vertices){
+            // Solo procesamos los vértices que no fueron visitados todavía
+            if(!visitados.contains(vertice)){
+                // Si encontramos un ciclo retornamos true inmediatamente
+                if(tieneCiclosAux(vertice, visitados, enProceso)){
+                    return true;
+                }
+            }
+        }
+        // Si recorrimos todo el grafo sin encontrar ciclos retornamos false
+        return false;
+    }
+
+    private boolean tieneCiclosAux(V vertice, Set<V> visitados, Set<V> enProceso) {
+        // Si el vértice está siendo procesado actualmente significa que
+        // encontramos un camino que vuelve a él → hay ciclo
+        if (enProceso.contains(vertice)) return true;
+
+        // Si ya fue procesado completamente en una iteración anterior → no hay ciclo por acá
+        if (visitados.contains(vertice)) return false;
+
+        // Marcamos el vértice como "en proceso" — está siendo visitado actualmente
+        enProceso.add(vertice);
+
+        // Recorremos todas las aristas salientes del vértice actual
+        for (Edge<V, D> arista : aristas()) {
+            // Verificamos que la arista salga del vértice actual
+            if (construirComparable(vertice).compareTo(arista.source()) == 0) {
+                // Llamamos recursivamente con el vértice destino
+                // Si encontramos un ciclo lo propagamos hacia arriba
+                if (tieneCiclosAux(arista.target(), visitados, enProceso)) {
+                    return true;
+                }
+            }
+        }
+
+        // Terminamos de procesar este vértice — lo sacamos de enProceso
+        // y lo marcamos como visitado completamente
+        enProceso.remove(vertice);
+        visitados.add(vertice);
+
         return false;
     }
 }

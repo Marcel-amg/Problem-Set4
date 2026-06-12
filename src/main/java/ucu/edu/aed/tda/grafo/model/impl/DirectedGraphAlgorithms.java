@@ -185,7 +185,41 @@ public class DirectedGraphAlgorithms implements IDirectedGraphAlgorithms {
 
     @Override
     public <V, D extends WeightedEdge> List<Path<V>> obtenerTodosLosCaminos(Comparable<V> source, Comparable<V> target, IGraph<V, D> grafo) {
-        return List.of();
+        Set<V> visitados = new HashSet<>();
+        List<V> camino = new ArrayList<>();
+        List<Path<V>> caminosEncontrados = new ArrayList<>();
+        // Buscamos el vértice origen
+        V actual = grafo.buscarVertice(source);
+
+        // Llamamos al método auxiliar que explora todos los caminos
+        obtener(grafo, actual, target, camino, 0.0, visitados, caminosEncontrados);
+
+        return caminosEncontrados;
+    }
+
+    private <V, D extends WeightedEdge> void obtener(IGraph<V, D> grafo, V actual, Comparable<V> target, List<V> caminoActual, double costoActual, Set<V> visitados, List<Path<V>> resultados){
+
+        // Si ya fue visitado en este camino, no seguimos para evitar ciclos
+        if(visitados.contains(actual)){return;}
+
+        // Marcamos el vértice como visitado y lo agregamos al camino actual
+        visitados.add(actual);
+        caminoActual.add(actual);
+
+        // Si llegamos al destino guardamos el camino encontrado con su costo
+        // Hacemos una copia del camino para que no se modifique después
+        if(target.compareTo(actual) == 0){
+            resultados.add(new Path<>(new ArrayList<>(caminoActual), costoActual));
+        }
+
+        // Recorremos todas las aristas salientes y exploramos recursivamente cada sucesor
+        for(Edge<V, D> arista : grafo.adyacencias(grafo.construirComparable(actual))){
+            obtener(grafo, arista.target(), target, caminoActual, costoActual + arista.dato().getWeight(), visitados, resultados);
+        }
+
+        // Backtracking — deshacemos los cambios para explorar otros caminos
+        visitados.remove(actual);
+        caminoActual.remove(caminoActual.size() - 1);
     }
 
     @Override
@@ -216,11 +250,66 @@ public class DirectedGraphAlgorithms implements IDirectedGraphAlgorithms {
 
     @Override
     public <V, D> void recorridoEnAmplitud(IGraph<V, D> grafo, Comparable<V> sourceCriteria, Consumer<V> consumer) {
+        Queue<V> cola = new LinkedList<>();
+        Set<V> visitados = new HashSet<>();
 
+        // Buscamos el vértice origen
+        V actual = grafo.buscarVertice(sourceCriteria);
+
+        // Si no existe el vértice origen salimos
+        if (actual == null) return;
+
+        // Marcamos el origen como visitado y lo agregamos a la cola
+        visitados.add(actual);
+        cola.add(actual);
+
+        // Mientras haya vértices pendientes de procesar
+        while(!cola.isEmpty()){
+            // Sacamos el primero de la cola y lo procesamos
+            V vertice = cola.poll();
+            consumer.accept(vertice);
+
+            // Recorremos todas las aristas salientes del vértice actual
+            for (Edge<V, D> arista : grafo.adyacencias(grafo.construirComparable(vertice))){
+                // Si el destino no fue visitado lo agregamos a la cola y marcamos como visitado
+                if(!visitados.contains(arista.target())){
+                    visitados.add(arista.target());
+                    cola.add(arista.target());
+                }
+            }
+        }
     }
 
     @Override
     public <V, D> List<V> calcularClasificacionTopologica(IDirectedIGraph<V, D> grafo) {
-        return List.of();
+        LinkedList<V> clasificacion = new LinkedList<>();
+        Set<V> visitados = new HashSet<>();
+
+        // Recorremos todos los vértices del grafo
+        for (V vertice : grafo.vertices()){
+            // Solo procesamos los vértices no visitados todavía
+            if(!visitados.contains(vertice)){
+                topoAux(grafo, vertice, visitados, clasificacion);
+            }
+        }
+
+        return clasificacion;
+    }
+
+    private <V, D> void topoAux(IDirectedIGraph<V, D> grafo, V vertice, Set<V> visitados, LinkedList<V> clasificacion) {
+        // Si ya fue visitado no lo procesamos de nuevo
+        if(visitados.contains(vertice)) {return;}
+
+        // Marcamos el vértice como visitado
+        visitados.add(vertice);
+
+        // Recorremos todas las aristas salientes y procesamos cada sucesor recursivamente
+        for (Edge<V, D> arista : grafo.adyacencias(grafo.construirComparable(vertice))){
+            topoAux(grafo, arista.target(), visitados, clasificacion);
+        }
+
+        // Una vez procesados todos los sucesores agregamos el vértice al frente
+        // Esto garantiza que los vértices sin dependencias queden al inicio
+        clasificacion.addFirst(vertice);
     }
 }
